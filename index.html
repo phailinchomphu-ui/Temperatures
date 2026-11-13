@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Classroom Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Smart Classroom</h1>
+                <p class="text-gray-500 text-sm mt-1"><i class="fa-solid fa-graduation-cap mr-2"></i>ระบบวัดอุณหภูมิและความชื้น IoT Dashboard</p>
+            </div>
+            <div class="flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium w-fit">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span id="sync-status">LIVE SYNC : กำลังดึงข้อมูล...</span>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Temperature Card -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <div class="inline-flex items-center space-x-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                            <span>TEMPERATURE</span>
+                        </div>
+                        <h2 class="text-gray-600 text-sm font-medium mb-1">อุณหภูมิ</h2>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-5xl font-bold text-gray-800" id="current-temp">
+                                <div class="loader"></div>
+                            </span>
+                            <span class="text-xl text-gray-500">°C</span>
+                        </div>
+                    </div>
+                    <div class="text-red-400 text-3xl">
+                        <i class="fa-solid fa-temperature-three-quarters"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-between items-center text-xs text-gray-500 border-t border-gray-100 pt-3 relative z-10">
+                    <span class="flex items-center"><i class="fa-solid fa-clock mr-1"></i>อัปเดตล่าสุด</span>
+                    <span id="temp-time">--:--</span>
+                </div>
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <div class="inline-flex items-center space-x-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                            <span>HUMIDITY</span>
+                        </div>
+                        <h2 class="text-gray-600 text-sm font-medium mb-1">ความชื้นสัมพัทธ์</h2>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-5xl font-bold text-gray-800" id="current-hum">
+                                <div class="loader"></div>
+                            </span>
+                            <span class="text-xl text-gray-500">%</span>
+                        </div>
+                    </div>
+                    <div class="text-blue-400 text-3xl">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-between items-center text-xs text-gray-500 border-t border-gray-100 pt-3 relative z-10">
+                    <span class="flex items-center"><i class="fa-solid fa-clock mr-1"></i>อัปเดตล่าสุด</span>
+                    <span id="hum-time">--:--</span>
+                </div>
+            </div>
+
+            <!-- Heat Index Card -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <div class="inline-flex items-center space-x-2 bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                            <span>HEAT INDEX</span>
+                        </div>
+                        <h2 class="text-gray-600 text-sm font-medium mb-1">ดัชนีความร้อน (ความรู้สึกจริง)</h2>
+                        <div class="flex items-baseline space-x-1">
+                            <span class="text-5xl font-bold text-gray-800" id="current-hi">
+                                <div class="loader"></div>
+                            </span>
+                            <span class="text-xl text-gray-500">°C</span>
+                        </div>
+                    </div>
+                    <div class="text-orange-400 text-3xl">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-between items-center text-xs text-gray-500 border-t border-gray-100 pt-3 relative z-10">
+                    <span class="flex items-center"><i class="fa-solid fa-clock mr-1"></i>อัปเดตล่าสุด</span>
+                    <span id="hi-time">--:--</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Chart Section -->
+        <div class="glass-card rounded-2xl p-6 mt-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        กราฟแสดงข้อมูล 24 ค่าล่าสุด
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1 ml-11">ดึงข้อมูลจาก Google Sheets ของคุณ</p>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> อุณหภูมิ (°C)
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> ความชื้น (%)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Container -->
+            <div class="relative w-full h-[400px]">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal สำหรับแจ้งปัญหา CORS -->
+        <div id="custom-alert" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                    <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-center text-gray-900 mb-2">แจ้งเตือน CORS Error 🚨</h3>
+                <div class="text-sm text-gray-600 mb-6 text-left space-y-2">
+                    <p>พบปัญหา <strong>Failed to fetch</strong> ระบบ Google บล็อกการดึงข้อมูลครับ วิธีแก้คือ:</p>
+                    <ol class="list-decimal list-inside space-y-1 ml-2">
+                        <li>ไปที่ Google Apps Script</li>
+                        <li>กด <strong>Deploy</strong> (การทำให้ใช้งานได้) -> <strong>Manage deployments</strong></li>
+                        <li>กดไอคอนดินสอแก้ไข เลือก <strong>New version</strong> (เวอร์ชันใหม่)</li>
+                        <li>เปลี่ยน <strong>ผู้มีสิทธิ์เข้าถึง (Who has access)</strong> เป็น <strong>"ทุกคน (Anyone)"</strong></li>
+                        <li>กด Deploy แล้วนำลิงก์ใหม่มาใส่ในโค้ดครับ</li>
+                    </ol>
+                </div>
+                <button onclick="closeAlert()" class="w-full bg-red-600 text-white rounded-lg py-2 font-medium hover:bg-red-700 transition-colors">เข้าใจแล้ว</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // === ลิงก์ API ของคุณถูกใส่ไว้ที่นี่แล้ว ===
+        const API_URL = "https://script.google.com/macros/s/AKfycbzlC1wGSSN16ap--YPmtnCwBYTAR-UlD0y8sEo6jZ0isl9whlJ8kwoIyVVB2qqVZ8_Q/exec";
+
+        let mainChart = null;
+
+        // ฟังก์ชันคำนวณดัชนีความร้อน (Heat Index)
+        function calculateHeatIndex(temp, humidity) {
+            if (temp < 27) return temp; // ถ้าต่ำกว่า 27 องศา ให้ใช้ค่าอุณหภูมิปกติ
+            const c1 = -8.78469475556, c2 = 1.61139411, c3 = 2.33854883889;
+            const c4 = -0.14611605, c5 = -0.012308094, c6 = -0.0164248277778;
+            const c7 = 0.002211732, c8 = 0.00072546, c9 = -0.000003582;
+            let hi = c1 + (c2 * temp) + (c3 * humidity) + (c4 * temp * humidity) + (c5 * temp * temp) + (c6 * humidity * humidity) + (c7 * temp * temp * humidity) + (c8 * temp * humidity * humidity) + (c9 * temp * temp * humidity * humidity);
+            return Number(hi.toFixed(1));
+        }
+
+        // ฟังก์ชันสร้างข้อมูลจำลอง (กรณีดึงข้อมูลจริงไม่สำเร็จ)
+        function generateMockData() {
+            const data = [];
+            const now = new Date();
+            let currentTemp = 25.0;
+            let currentHum = 60.0;
+            for(let i = 23; i >= 0; i--) {
+                const time = new Date(now.getTime() - (i * 60 * 60 * 1000));
+                currentTemp += (Math.random() - 0.5) * 2;
+                currentHum += (Math.random() - 0.5) * 5;
+                data.push({
+                    time: time.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                    temperature: currentTemp.toFixed(1),
+                    humidity: currentHum.toFixed(1)
+                });
+            }
+            return data;
+        }
+
+        // ฟังก์ชันดึงข้อมูลจาก Google Sheets
+        async function fetchSensorData() {
+            try {
+                document.getElementById('sync-status').innerText = 'LIVE SYNC : กำลังดึงข้อมูล...';
+                
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    processData(data);
+                    // รีเซ็ตสีกลับเป็นสีเขียวเผื่อเคย Error มาก่อน
+                    document.getElementById('sync-status').innerText = 'LIVE SYNC : อัปเดตแล้ว';
+                    document.getElementById('sync-status').parentElement.classList.replace('bg-red-100', 'bg-green-100');
+                    document.getElementById('sync-status').parentElement.classList.replace('text-red-700', 'text-green-700');
+                } else {
+                    document.getElementById('sync-status').innerText = 'LIVE SYNC : ไม่พบข้อมูล';
+                    clearLoaders();
+                }
+            } catch (error) {
+                // เปลี่ยนจาก console.error เป็น console.warn เพื่อไม่ให้ระบบแจ้งเป็น Error สีแดง
+                console.warn("ไม่สามารถดึงข้อมูลจริงได้ (CORS Error): กรุณาตรวจสอบการตั้งค่า Deploy เป็น Anyone ใน Google Apps Script");
+                
+                // แจ้งเตือนสาเหตุที่แท้จริงให้ผู้ใช้ทราบ
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    document.getElementById('sync-status').innerText = 'LIVE SYNC : ติด CORS (ลืมตั้งเป็น Anyone)';
+                    // เปิดหน้าต่าง Modal แทนการใช้ alert()
+                    document.getElementById('custom-alert').classList.remove('hidden');
+                } else {
+                    document.getElementById('sync-status').innerText = 'LIVE SYNC : ขัดข้อง (ดู Error ใน Console)';
+                }
+
+                // เปลี่ยนป้ายสถานะเป็นสีแดงเพื่อแจ้งเตือน
+                document.getElementById('sync-status').parentElement.classList.replace('bg-green-100', 'bg-red-100');
+                document.getElementById('sync-status').parentElement.classList.replace('text-green-700', 'text-red-700');
+                
+                // เรียกใช้ข้อมูลจำลองเพื่อให้หน้าเว็บแสดงผลได้ไปก่อน
+                const mockData = generateMockData();
+                processData(mockData);
+            }
+        }
+
+        // ฟังก์ชันเคลียร์ไอคอนโหลดดิงกรณีเกิด Error
+        function clearLoaders() {
+            if(document.getElementById('current-temp').innerHTML.includes('loader')) document.getElementById('current-temp').innerText = '--';
+            if(document.getElementById('current-hum').innerHTML.includes('loader')) document.getElementById('current-hum').innerText = '--';
+            if(document.getElementById('current-hi').innerHTML.includes('loader')) document.getElementById('current-hi').innerText = '--';
+        }
+
+        // ประมวลผลและอัปเดตหน้าจอ
+        function processData(data) {
+            // แยกข้อมูลใส่ Array
+            const labels = data.map(item => item.time);
+            const temps = data.map(item => Number(item.temperature).toFixed(1));
+            const hums = data.map(item => Number(item.humidity).toFixed(1));
+
+            // ดึงค่าล่าสุด (ตัวสุดท้ายของ Array)
+            const latestTemp = temps[temps.length - 1];
+            const latestHum = hums[hums.length - 1];
+            const latestTime = labels[labels.length - 1];
+            const latestHI = calculateHeatIndex(Number(latestTemp), Number(latestHum));
+
+            // อัปเดตตัวเลขในการ์ด
+            document.getElementById('current-temp').innerText = latestTemp;
+            document.getElementById('temp-time').innerText = latestTime;
+
+            document.getElementById('current-hum').innerText = latestHum;
+            document.getElementById('hum-time').innerText = latestTime;
+
+            document.getElementById('current-hi').innerText = latestHI;
+            document.getElementById('hi-time').innerText = latestTime;
+
+            // วาดกราฟ
+            renderChart(labels, temps, hums);
+        }
+
+        // ฟังก์ชันวาดกราฟ Chart.js
+        function renderChart(labels, temps, hums) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            if (mainChart) {
+                mainChart.destroy(); // ลบกราฟเก่าทิ้งก่อนวาดใหม่
+            }
+
+            // สร้างสีไล่ระดับ
+            const tempGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            tempGradient.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
+            tempGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+            const humGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            humGradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+            humGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'อุณหภูมิ (°C)',
+                            data: temps,
+                            borderColor: '#ef4444',
+                            backgroundColor: tempGradient,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#ef4444',
+                            pointRadius: 3,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'ความชื้น (%)',
+                            data: hums,
+                            borderColor: '#3b82f6',
+                            backgroundColor: humGradient,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 3,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            type: 'linear', display: true, position: 'left', 
+                            title: { display: true, text: 'อุณหภูมิ (°C)', color: '#ef4444' }
+                        },
+                        y1: { 
+                            type: 'linear', display: true, position: 'right', 
+                            title: { display: true, text: 'ความชื้น (%)', color: '#3b82f6' },
+                            grid: { drawOnChartArea: false } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // ฟังก์ชันปิดแจ้งเตือน Modal
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        // -----------------------------------------
+        // เริ่มทำงานเมื่อเปิดหน้าเว็บ
+        // -----------------------------------------
+        fetchSensorData();
+        
+        // สั่งให้อัปเดตข้อมูลอัตโนมัติทุกๆ 5 นาที (300,000 มิลลิวินาที)
+        setInterval(fetchSensorData, 300000);
+
+    </script>
+</body>
+</html>
